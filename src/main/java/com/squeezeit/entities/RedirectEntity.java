@@ -19,11 +19,9 @@ import java.util.UUID;
 public class RedirectEntity {
 
     @Id
-    private UUID uuid;
+    private String shortUrlId;
 
     private String longUrl;
-
-    private String shortUrl;
 
     private int timesUsed;
 }

@@ -5,15 +5,20 @@ import com.squeezeit.repositories.RedirectRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.Collections;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class UrlService {
 
     private final RedirectRepository redirectRepository;
+
+    @Value("${app.domain}")
+    private String domain;
 
     @Autowired
     public UrlService(RedirectRepository redirectRepository) {
@@ -22,27 +27,35 @@ public class UrlService {
 
     public RedirectEntity createShortUrl(String longUrl) {
 
-        String shortUrl = genRandomShortUrl();
-        while(redirectRepository.findByShortUrl(shortUrl).isPresent())
-            shortUrl = genRandomShortUrl();
+        String shortUrlId = genRandomShortUrlId();
+        while(!redirectRepository.findAllById(Collections.singleton(shortUrlId)).isEmpty())
+            shortUrlId = genRandomShortUrlId();
 
         RedirectEntity redirectEntity = RedirectEntity.builder()
-                .uuid(UUID.randomUUID())
+                .shortUrlId(shortUrlId)
                 .longUrl(longUrl)
-                .shortUrl(shortUrl)
                 .timesUsed(0)
                 .build();
 
         redirectRepository.save(redirectEntity);
 
+        redirectEntity.setShortUrlId(domain + shortUrlId);
         return redirectEntity;
     }
 
-    private String genRandomShortUrl() {
+    private String genRandomShortUrlId() {
 
-        String shortUrl = "http://localhost:8080/";
-        shortUrl = shortUrl.concat(RandomStringUtils.randomAlphanumeric(10));
+        String shortUrlId = RandomStringUtils.randomAlphanumeric(10);
 
-        return shortUrl;
+        return shortUrlId;
+    }
+
+    public String fetchLongUrl(String shortUrlId) {
+        Optional<RedirectEntity> redirectEntity = redirectRepository.findById(shortUrlId);
+
+        if(redirectEntity.isEmpty())
+            return "http://localhost:8080/";
+
+        return redirectEntity.get().getLongUrl();
     }
 }
