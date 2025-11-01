@@ -1,0 +1,14 @@
+package com.squeezeit.repositories;
+
+import com.squeezeit.entities.RedirectEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface RedirectRepository extends JpaRepository<RedirectEntity, UUID> {
+
+    Optional<RedirectEntity> findByShortUrl(String shortUrl);
+}
