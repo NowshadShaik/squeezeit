@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface RedirectRepository extends JpaRepository<RedirectEntity, UUID> {
+public interface RedirectRepository extends JpaRepository<RedirectEntity, String> {
 
-    Optional<RedirectEntity> findByShortUrl(String shortUrl);
 }
