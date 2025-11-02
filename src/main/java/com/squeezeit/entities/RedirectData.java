@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import java.time.ZonedDateTime;
 
 @Entity
 @Data
@@ -16,12 +16,18 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "redirect_urls")
-public class RedirectEntity {
+public class RedirectData {
 
     @Id
     private String shortUrlId;
 
     private String longUrl;
 
-    private int timesUsed;
+    private int clickCount;
+
+    private ZonedDateTime createdTimestamp;
+
+    public void incrementClickCount() {
+        this.clickCount++;
+    }
 }
