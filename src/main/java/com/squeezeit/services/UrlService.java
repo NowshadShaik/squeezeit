@@ -1,6 +1,8 @@
 package com.squeezeit.services;
 
-import com.squeezeit.entities.RedirectEntity;
+import com.squeezeit.Exceptions.NoSuchUrlException;
+import com.squeezeit.entities.RedirectData;
+import com.squeezeit.models.Statistics;
 import com.squeezeit.repositories.RedirectRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -8,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -25,37 +28,51 @@ public class UrlService {
         this.redirectRepository = redirectRepository;
     }
 
-    public RedirectEntity createShortUrl(String longUrl) {
+    public RedirectData createShortUrl(String longUrl) {
 
         String shortUrlId = genRandomShortUrlId();
         while(!redirectRepository.findAllById(Collections.singleton(shortUrlId)).isEmpty())
             shortUrlId = genRandomShortUrlId();
 
-        RedirectEntity redirectEntity = RedirectEntity.builder()
+        RedirectData redirectData = RedirectData.builder()
                 .shortUrlId(shortUrlId)
                 .longUrl(longUrl)
-                .timesUsed(0)
+                .clickCount(0)
+                .createdTimestamp(ZonedDateTime.now())
                 .build();
 
-        redirectRepository.save(redirectEntity);
+        redirectRepository.save(redirectData);
 
-        redirectEntity.setShortUrlId(domain + shortUrlId);
-        return redirectEntity;
+        redirectData.setShortUrlId(domain + shortUrlId);
+        return redirectData;
     }
 
-    private String genRandomShortUrlId() {
-
-        String shortUrlId = RandomStringUtils.randomAlphanumeric(10);
-
-        return shortUrlId;
+    private static String genRandomShortUrlId() {
+        return RandomStringUtils.randomAlphanumeric(10);
     }
 
-    public String fetchLongUrl(String shortUrlId) {
-        Optional<RedirectEntity> redirectEntity = redirectRepository.findById(shortUrlId);
+    public String fetchLongUrl(String shortUrlId) throws NoSuchUrlException {
+        Optional<RedirectData> redirectDataDB = redirectRepository.findById(shortUrlId);
 
-        if(redirectEntity.isEmpty())
-            return "http://localhost:8080/";
+        if(redirectDataDB.isEmpty())
+            throw new NoSuchUrlException("Invalid URL.");
 
-        return redirectEntity.get().getLongUrl();
+        RedirectData redirectData = redirectDataDB.get();
+        redirectData.incrementClickCount();
+        redirectRepository.save(redirectData);
+
+        return redirectData.getLongUrl();
+    }
+
+    public Statistics fetchStatistics(String shortUrlId) throws NoSuchUrlException {
+
+        Optional<RedirectData> redirectData = redirectRepository.findById(shortUrlId);
+
+        if(redirectData.isEmpty())
+            throw new NoSuchUrlException("Invalid URL.");
+
+        Statistics stats = new Statistics(redirectData.get().getCreatedTimestamp(), redirectData.get().getClickCount());
+
+        return stats;
     }
 }
