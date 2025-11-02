@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -21,39 +22,47 @@ public class UrlController {
         this.urlService = urlService;
     }
 
-    @ResponseBody
+    @GetMapping("/")
+    private String home() {
+        return "index";
+    }
+
     @PostMapping("/squeeze")
-    private ResponseEntity<RedirectData> shortenUrl(@RequestParam String URL) {
+    private String shortenUrl(@RequestParam String longURL, Model model) {
 
-        RedirectData redirectData = urlService.createShortUrl(URL);
+        String shortUrl = urlService.createShortUrl(longURL);
+        model.addAttribute("longUrl", longURL);
+        model.addAttribute("shortUrl", shortUrl);
 
-        return new ResponseEntity<>(redirectData, HttpStatus.CREATED);
+        return "index";
     }
 
     @GetMapping("/{shortUrlId}")
-    private String redirectUrl(@PathVariable("shortUrlId") String shortUrlId) {
+    private String redirectUrl(@PathVariable("shortUrlId") String shortUrlId, Model model) {
 
         String longUrl = null;
         try {
             longUrl = urlService.fetchLongUrl(shortUrlId);
         } catch (NoSuchUrlException e) {
-            return "redirect:/errorPage";
+            model.addAttribute("message", e.getMessage());
+            return "error";
         }
 
         return "redirect:" + longUrl;
     }
 
     @GetMapping("/statistics/{shortUrlId}")
-    private ResponseEntity<?> statistics(@PathVariable("shortUrlId") String shortUrlId) {
+    private String statistics(@PathVariable("shortUrlId") String shortUrlId, Model model) {
 
         Statistics stats = null;
 
         try {
             stats = urlService.fetchStatistics(shortUrlId);
         } catch (NoSuchUrlException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            model.addAttribute("message", e.getMessage());
+            return "error";
         }
 
-        return new ResponseEntity<>(stats, HttpStatus.OK);
+        return "statistics";
     }
 }

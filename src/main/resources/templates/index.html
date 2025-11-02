@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Squeeze Link</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Squeeze Link</h1>
+            <p>Problem with sharing long links? Squeeze your links with Squeeze Link</p>
+
+            <form th:action="@{/squeeze}" method="post">
+                <input type="text" name="longURL" placeholder="Enter your long URL here" required>
+                <button type="submit">Squeeze</button>
+            </form>
+
+            <div th:if="${shortUrl}">
+                <input type="text" th:value="${shortUrl}" id="shortUrlInput" readonly>
+                <button type="button"
+                        onclick="navigator.clipboard.writeText(document.getElementById('shortUrlInput').value)">
+                    Copy
+                </button>
+            </div>
+        </div>
+    </body>
+</html>

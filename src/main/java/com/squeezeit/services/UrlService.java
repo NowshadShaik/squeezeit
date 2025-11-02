@@ -28,7 +28,7 @@ public class UrlService {
         this.redirectRepository = redirectRepository;
     }
 
-    public RedirectData createShortUrl(String longUrl) {
+    public String createShortUrl(String longUrl) {
 
         String shortUrlId = genRandomShortUrlId();
         while(!redirectRepository.findAllById(Collections.singleton(shortUrlId)).isEmpty())
@@ -43,19 +43,18 @@ public class UrlService {
 
         redirectRepository.save(redirectData);
 
-        redirectData.setShortUrlId(domain + shortUrlId);
-        return redirectData;
+        return domain + shortUrlId;
     }
 
     private static String genRandomShortUrlId() {
-        return RandomStringUtils.randomAlphanumeric(10);
+        return RandomStringUtils.randomAlphanumeric(8);
     }
 
     public String fetchLongUrl(String shortUrlId) throws NoSuchUrlException {
         Optional<RedirectData> redirectDataDB = redirectRepository.findById(shortUrlId);
 
         if(redirectDataDB.isEmpty())
-            throw new NoSuchUrlException("Invalid URL.");
+            throw new NoSuchUrlException("Invalid URL...");
 
         RedirectData redirectData = redirectDataDB.get();
         redirectData.incrementClickCount();
@@ -69,7 +68,7 @@ public class UrlService {
         Optional<RedirectData> redirectData = redirectRepository.findById(shortUrlId);
 
         if(redirectData.isEmpty())
-            throw new NoSuchUrlException("Invalid URL.");
+            throw new NoSuchUrlException("Invalid URL...");
 
         Statistics stats = new Statistics(redirectData.get().getCreatedTimestamp(), redirectData.get().getClickCount());
 
